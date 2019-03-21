@@ -68,6 +68,7 @@ extern "C" {
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 void setInitialState();
+void trafficLightStateMachine(enum TrafficLightState state);
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/

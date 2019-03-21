@@ -112,7 +112,6 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   setInitialState();
-  enum TrafficLightState state = CarGreen;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -123,7 +122,15 @@ int main(void)
 
     if(HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_10)==GPIO_PIN_SET)
     {
-      state=ButtonPressed;
+      trafficLightStateMachine(ButtonPressed);
+    }
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
+}
+
+void trafficLightStateMachine(enum TrafficLightState state)
+{
       while(state!=CarGreen)
       {
         switch(state)
@@ -173,12 +180,7 @@ int main(void)
         }
       }
       setInitialState();
-    }
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
 }
-
  /*
       PIN PC_7 ROJO PEATONES
       PIN PA_9 VERDE PEATONES
