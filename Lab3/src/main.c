@@ -111,7 +111,8 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  setInitialState();
+  enum TrafficLightState state = CarGreen;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -120,9 +121,82 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
+    if(HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_10)==GPIO_PIN_SET)
+    {
+      state=ButtonPressed;
+      while(state!=CarGreen)
+      {
+        switch(state)
+        {
+          case ButtonPressed:
+            HAL_Delay(3000);
+            state=CarYellow;
+            break;
+          case CarYellow:
+            /*Turn off green cars traffic light*/
+            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+
+            /*Turn on yellow cars tarffic light*/
+            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
+
+            HAL_Delay(3000);
+            state=CarRed;
+            break;
+          case CarRed:
+            /*Turn off yellow cars traffic light and red walkers traffic light*/
+            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+
+            /*Turn on green walkers traffic light and read cars traffic light*/
+            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9|GPIO_PIN_10, GPIO_PIN_SET);
+
+            HAL_Delay(15000);
+            state=WalkerBlinkingGreen;
+            break;
+          case WalkerBlinkingGreen:
+            for(int i=0; i<12; i++)
+            {
+              if(i%2==0)
+              {
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+              }
+              else
+              {
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+              }
+              HAL_Delay(250);
+            }
+            state=CarGreen;
+            break;
+          case CarGreen:
+            break;
+        }
+      }
+      setInitialState();
+    }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
+}
+
+ /*
+      PIN PC_7 ROJO PEATONES
+      PIN PA_9 VERDE PEATONES
+      PIN PB_10 BOTON PEATONES
+      PIN PB_5 VERDE COCHES
+      PIN PB_3 AMARILLO COCHES
+      PIN PA_10 ROJO COCHES
+  */
+
+void setInitialState()
+{
+
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin|GPIO_PIN_9|GPIO_PIN_10, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+  
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+  
 }
 
 /**
