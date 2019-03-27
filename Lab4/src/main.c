@@ -63,7 +63,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
-
+enum TrafficLightState state = WaitingInterrupt;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -116,7 +116,6 @@ int main(void)
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
   setInitialState();
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -124,64 +123,59 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
-}
+    switch(state)
+    {
+      case ButtonPressed:
+        HAL_Delay(3000);
+        state=CarYellow;
+        break;
+      case CarYellow:
+        /*Turn off green cars traffic light*/
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
 
-void trafficLightStateMachine(enum TrafficLightState state)
-{
-      while(state!=CarGreen)
-      {
-        switch(state)
+        /*Turn on yellow cars tarffic light*/
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
+
+        HAL_Delay(3000);
+        state=CarRed;
+        break;
+      case CarRed:
+        /*Turn off yellow cars traffic light and red walkers traffic light*/
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+
+        /*Turn on green walkers traffic light and read cars traffic light*/
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9|GPIO_PIN_10, GPIO_PIN_SET);
+
+        HAL_Delay(15000);
+        state=WalkerBlinkingGreen;
+        break;
+      case WalkerBlinkingGreen:
+        for(int i=0; i<12; i++)
         {
-          case ButtonPressed:
-            HAL_Delay(3000);
-            state=CarYellow;
-            break;
-          case CarYellow:
-            /*Turn off green cars traffic light*/
-            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
-
-            /*Turn on yellow cars tarffic light*/
-            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
-
-            HAL_Delay(3000);
-            state=CarRed;
-            break;
-          case CarRed:
-            /*Turn off yellow cars traffic light and red walkers traffic light*/
-            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
-
-            /*Turn on green walkers traffic light and read cars traffic light*/
-            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9|GPIO_PIN_10, GPIO_PIN_SET);
-
-            HAL_Delay(15000);
-            state=WalkerBlinkingGreen;
-            break;
-          case WalkerBlinkingGreen:
-            for(int i=0; i<12; i++)
-            {
-              if(i%2==0)
-              {
-                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
-              }
-              else
-              {
-                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-              }
-              HAL_Delay(250);
-            }
-            state=CarGreen;
-            break;
-          case CarGreen:
-            break;
-        }
-      }
-      setInitialState();
+          if(i%2==0)
+          {
+            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+          }
+            else
+          {
+            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+          }
+            HAL_Delay(250);
+          }
+          state=CarGreen;
+          break;
+      case CarGreen:
+        setInitialState();
+        state=WaitingInterrupt;
+        break;
+      case WaitingInterrupt:
+        break;
+    }
+  /* USER CODE END 3 */
+  }
 }
+
  /*
       PIN PC_7 ROJO PEATONES
       PIN PA_9 VERDE PEATONES
@@ -252,7 +246,7 @@ void SystemClock_Config(void)
 static void MX_NVIC_Init(void)
 {
   /* EXTI15_10_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
@@ -354,13 +348,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   
   __disable_irq();
 
-  if(GPIO_Pin == GPIO_PIN_10)
+  if(GPIO_Pin == GPIO_PIN_10 && state==WaitingInterrupt)
   {
-    trafficLightStateMachine(ButtonPressed);
+    state=ButtonPressed;
   }
   __enable_irq();
 }
-
 /* USER CODE END 4 */
 
 /**

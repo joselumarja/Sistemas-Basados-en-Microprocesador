@@ -2,6 +2,7 @@
 
 enum TrafficLightState
 {
+    WaitingInterrupt,
     CarGreen,
     ButtonPressed,
     CarYellow,
