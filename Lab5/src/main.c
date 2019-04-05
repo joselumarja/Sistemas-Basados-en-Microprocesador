@@ -426,6 +426,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   if(htim->Instance==TIM11)
   {
+   
+   //++TimerCount; 
     if(++TimerCount>232)
     {
       shutDownTimer(htim);
