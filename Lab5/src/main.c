@@ -427,8 +427,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   if(htim->Instance==TIM11)
   {
    
-   //++TimerCount; 
-    if(++TimerCount>232)
+   ++TimerCount; 
+    /*if(++TimerCount>232)
     {
       shutDownTimer(htim);
       NearbyCarState.ReadyOperation=TRUE;
@@ -442,7 +442,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     }
   }
 
-  __enable_irq();
+  __enable_irq();*/
 }
 
 /* USER CODE END 4 */
