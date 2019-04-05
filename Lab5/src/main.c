@@ -210,35 +210,16 @@ void setInitialState()
   
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  if(htim->Instance==TIM11)
-  {
-    if(++TimerCount>232)
-    {
-      shutDownTimer(htim);
-      NearbyCarState.ReadyOperation=TRUE;
-      return;
-    }
-
-    if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6)==1)
-    {
-      NearbyCarState.CarsInProximities=TRUE;
-      NearbyCarState.ReadyOperation=TRUE;
-    }
-  }
-}
-
 int checkNearbyCars()
 {
-  __HAL_TIM_ENABLE(&htim11);
+  HAL_TIM_Base_Start(&htim11);
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-  while(TimerCount<1)
-  {
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-  }
 
+  while(TimerCount>1);
+
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
   TimerCount=0;
+
   while(NearbyCarState.ReadyOperation==FALSE);
 
   return NearbyCarState.CarsInProximities;
@@ -246,7 +227,7 @@ int checkNearbyCars()
 
 void shutDownTimer(TIM_HandleTypeDef *Timer)
 {
-  __HAL_TIM_DISABLE(Timer);
+  HAL_TIM_Base_Stop(Timer);
   TimerCount=0;
 }
 
@@ -438,6 +419,30 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   }
   __enable_irq();
 }
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  __disable_irq();
+
+  if(htim->Instance==TIM11)
+  {
+    if(++TimerCount>232)
+    {
+      shutDownTimer(htim);
+      NearbyCarState.ReadyOperation=TRUE;
+    }
+
+    if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6)==1)
+    {
+      shutDownTimer(htim);
+      NearbyCarState.CarsInProximities=TRUE;
+      NearbyCarState.ReadyOperation=TRUE;
+    }
+  }
+
+  __enable_irq();
+}
+
 /* USER CODE END 4 */
 
 /**
