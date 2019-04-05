@@ -68,6 +68,8 @@ extern "C" {
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 void setInitialState();
+int checkNearbyCars();
+void shutDownTimer(TIM_HandleTypeDef *Timer);
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/

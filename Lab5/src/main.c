@@ -65,6 +65,8 @@
 TIM_HandleTypeDef htim11;
 enum TrafficLightState state = WaitingInterrupt;
 UART_HandleTypeDef huart2;
+struct nearbyCarsState NearbyCarState;
+int TimerCount=0;
 
 /* USER CODE BEGIN PV */
 
@@ -120,6 +122,7 @@ int main(void)
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
   setInitialState();
+  shutDownTimer(&htim11);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -130,7 +133,10 @@ int main(void)
     switch(state)
     {
       case ButtonPressed:
-        HAL_Delay(3000);
+        if(checkNearbyCars()==TRUE)
+        {
+          HAL_Delay(3000);
+        }
         state=CarYellow;
         break;
       case CarYellow:
@@ -198,7 +204,50 @@ void setInitialState()
   
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+
+  NearbyCarState.CarsInProximities=FALSE;
+  NearbyCarState.ReadyOperation=FALSE;
   
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if(htim->Instance==TIM11)
+  {
+    if(++TimerCount>232)
+    {
+      shutDownTimer(htim);
+      NearbyCarState.ReadyOperation=TRUE;
+      return;
+    }
+
+    if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6)==1)
+    {
+      NearbyCarState.CarsInProximities=TRUE;
+      NearbyCarState.ReadyOperation=TRUE;
+    }
+  }
+}
+
+int checkNearbyCars()
+{
+  __HAL_TIM_ENABLE(&htim11);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+  while(TimerCount<1)
+  {
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  }
+
+  TimerCount=0;
+  while(NearbyCarState.ReadyOperation==FALSE);
+
+  return NearbyCarState.CarsInProximities;
+}
+
+void shutDownTimer(TIM_HandleTypeDef *Timer)
+{
+  __HAL_TIM_DISABLE(Timer);
+  TimerCount=0;
 }
 
 /**
@@ -271,9 +320,9 @@ static void MX_TIM11_Init(void)
 
   /* USER CODE END TIM11_Init 1 */
   htim11.Instance = TIM11;
-  htim11.Init.Prescaler = 0;
+  htim11.Init.Prescaler = 840;
   htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim11.Init.Period = 0;
+  htim11.Init.Period = 250;
   htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
   {
