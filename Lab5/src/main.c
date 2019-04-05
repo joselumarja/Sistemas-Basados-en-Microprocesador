@@ -66,7 +66,7 @@ TIM_HandleTypeDef htim11;
 enum TrafficLightState state = WaitingInterrupt;
 UART_HandleTypeDef huart2;
 struct nearbyCarsState NearbyCarState;
-int TimerCount=0;
+static volatile TimerCount=0;
 
 /* USER CODE BEGIN PV */
 
