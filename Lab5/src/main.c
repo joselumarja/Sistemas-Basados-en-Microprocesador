@@ -215,7 +215,7 @@ int checkNearbyCars()
   HAL_TIM_Base_Start(&htim11);
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
 
-  while(TimerCount>1);
+  while(TimerCount<1);
 
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
   TimerCount=0;
@@ -283,6 +283,9 @@ static void MX_NVIC_Init(void)
   /* EXTI15_10_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+  /* TIM1_TRG_COM_TIM11_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(TIM1_TRG_COM_TIM11_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(TIM1_TRG_COM_TIM11_IRQn);
 }
 
 /**
