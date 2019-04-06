@@ -66,7 +66,7 @@ TIM_HandleTypeDef htim11;
 enum TrafficLightState state = WaitingInterrupt;
 UART_HandleTypeDef huart2;
 struct nearbyCarsState NearbyCarState;
-int TimerCount=0;
+static volatile TimerCount=0;
 
 /* USER CODE BEGIN PV */
 
@@ -123,6 +123,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   setInitialState();
   shutDownTimer(&htim11);
+  //HAL_TIM_Base_Start_IT(&htim11);     AQUI SE INICIA EL TIMER!!!!
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -429,7 +430,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   if(htim->Instance==TIM11)
   {
-    if(++TimerCount>232)
+   
+   ++TimerCount; 
+    /*if(++TimerCount>232)
     {
       shutDownTimer(htim);
       NearbyCarState.ReadyOperation=TRUE;
@@ -443,7 +446,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     }
   }
 
-  __enable_irq();
+  __enable_irq();*/
 }
 
 /* USER CODE END 4 */
