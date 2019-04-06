@@ -123,6 +123,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   setInitialState();
   shutDownTimer(&htim11);
+  //HAL_TIM_Base_Start_IT(&htim11);     AQUI SE INICIA EL TIMER!!!!
   /* USER CODE END 2 */
 
   /* Infinite loop */
