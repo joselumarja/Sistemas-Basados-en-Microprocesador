@@ -70,6 +70,8 @@ extern "C" {
 void setInitialState();
 int checkNearbyCars();
 void shutDownTimer(TIM_HandleTypeDef *Timer);
+void setCarDetectorImputMode();
+void setCarDetectorOutputMode();
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/

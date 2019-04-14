@@ -63,10 +63,11 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim11;
-enum TrafficLightState state = WaitingInterrupt;
+static volatile enum TrafficLightState state = WaitingInterrupt;
 UART_HandleTypeDef huart2;
-struct nearbyCarsState NearbyCarState;
-static volatile TimerCount=0;
+static volatile struct nearbyCarsState NearbyCarState;
+static volatile int TimerCount=0;
+static volatile int CarDistance;
 
 /* USER CODE BEGIN PV */
 
@@ -122,8 +123,6 @@ int main(void)
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
   setInitialState();
-  shutDownTimer(&htim11);
-  HAL_TIM_Base_Start_IT(&htim11);     //AQUI SE INICIA EL TIMER!!!!
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -195,6 +194,7 @@ int main(void)
       PIN PB_5 VERDE COCHES
       PIN PB_3 AMARILLO COCHES
       PIN PA_10 ROJO COCHES
+      PIN PB_6 SENSOR ULTRASONIDO
   */
 
 void setInitialState()
@@ -213,22 +213,48 @@ void setInitialState()
 
 int checkNearbyCars()
 {
-  HAL_TIM_Base_Start(&htim11);
+  HAL_TIM_Base_Start_IT(&htim11);
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
 
   while(TimerCount<1);
 
+  shutDownTimer(&htim11);
+  setCarDetectorImputMode();
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-  TimerCount=0;
+  HAL_TIM_Base_Start_IT(&htim11);
 
   while(NearbyCarState.ReadyOperation==FALSE);
+
+  CarDistance = TimerCount*10/58;
+  shutDownTimer(&htim11);
+  setCarDetectorOutputMode();
 
   return NearbyCarState.CarsInProximities;
 }
 
+void setCarDetectorImputMode()
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL; 
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+}
+
+void setCarDetectorOutputMode()
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+}
+
 void shutDownTimer(TIM_HandleTypeDef *Timer)
 {
-  HAL_TIM_Base_Stop(Timer);
+  HAL_TIM_Base_Stop_IT(Timer);
   TimerCount=0;
 }
 
@@ -305,9 +331,9 @@ static void MX_TIM11_Init(void)
 
   /* USER CODE END TIM11_Init 1 */
   htim11.Instance = TIM11;
-  htim11.Init.Prescaler = 840;
+  htim11.Init.Prescaler = 83;
   htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim11.Init.Period = 250;
+  htim11.Init.Period = 9;
   htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
   {
@@ -414,39 +440,34 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  
-  __disable_irq();
 
   if(GPIO_Pin == GPIO_PIN_10 && state==WaitingInterrupt)
   {
     state=ButtonPressed;
   }
-  __enable_irq();
+
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  __disable_irq();
 
   if(htim->Instance==TIM11)
   {
    
-   ++TimerCount; 
-    /*if(++TimerCount>232)
+    if(TimerCount>233)
     {
-      shutDownTimer(htim);
       NearbyCarState.ReadyOperation=TRUE;
+      NearbyCarState.CarsInProximities=FALSE;
     }
 
-    if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6)==1)
+    if(TimerCount>5 && HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6)==GPIO_PIN_SET)
     {
-      shutDownTimer(htim);
       NearbyCarState.CarsInProximities=TRUE;
       NearbyCarState.ReadyOperation=TRUE;
     }
+    TimerCount++;
   }
 
-  __enable_irq();*/
 }
 
 /* USER CODE END 4 */
