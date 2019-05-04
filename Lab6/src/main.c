@@ -433,7 +433,7 @@ static void MX_USART2_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART2_Init 2 */
-
+  
   /* USER CODE END USART2_Init 2 */
 
 }
