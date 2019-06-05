@@ -200,10 +200,10 @@ int main(void)
         break;
 
       case Continue:
-        if(checkNearbyObstacles()==TRUE)
+        /*if(checkNearbyObstacles()==TRUE)
         {
-         // state=Stop;
-        }
+          state=Stop;
+        }*/
         break;
     }
     /* USER CODE BEGIN 3 */
@@ -228,16 +228,18 @@ void setSpeed(TIM_HandleTypeDef *htim, uint32_t Speed)
 
 int checkNearbyObstacles()
 {
+
+  NearbyObstacleState.ReadyOperation=FALSE;
+  setCarDetectorOutputMode();
   HAL_TIM_Base_Start_IT(&htim11);
 
-  setCarDetectorOutputMode();
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_SET);
 
   while(TimerCount<1);
 
   shutDownTimer(&htim11);
-  setCarDetectorImputMode();
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_RESET);
+  setCarDetectorImputMode();
   HAL_TIM_Base_Start_IT(&htim11);
 
   while(NearbyObstacleState.ReadyOperation==FALSE);
@@ -254,8 +256,8 @@ void setCarDetectorImputMode()
 
   GPIO_InitStruct.Pin = GPIO_PIN_10;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL; 
-  GPIO_InitStruct.Speed=GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN; 
+  GPIO_InitStruct.Speed=GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 }
 
@@ -643,7 +645,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       NearbyObstacleState.ObstacleInProximities=FALSE;
     }
 
-    if(TimerCount>10 && GPIOC->IDR && GPIO_IDR_ID10_Msk)
+    if(GPIOC->IDR && GPIO_IDR_ID10_Msk)
     {
       NearbyObstacleState.ObstacleInProximities=TRUE;
       NearbyObstacleState.ReadyOperation=TRUE;
